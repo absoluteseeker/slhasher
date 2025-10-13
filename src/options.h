@@ -42,6 +42,7 @@ typedef struct user_choices {
     enum source_type source;
     char *data_to_hash;
     char *compare_string;   // holds the reference hash
+    bool sumfile;
 } user_choices;
 
 

@@ -146,6 +146,7 @@ bool analyze_input(const int argc, char **restrict argv, struct function_infos *
     const char *help = "--help";
     const char *version = "--version";
     const char *str = "--string";
+    const char *sumfile = "--sumfile";
 
     if(argc < 2){       // return early if input is completely incorrect
         fprintf(stderr, "Error: not enough arguments have been submitted.\n");
@@ -168,6 +169,9 @@ bool analyze_input(const int argc, char **restrict argv, struct function_infos *
             } else if(strcmp(argv[arg_index], str) == 0){
                 choices->source = STRING;
                 continue;
+	    	} else if(strcmp(argv[arg_index], sumfile) == 0){
+				choices->sumfile = true;
+				continue;		
             } else if(strcmp(argv[arg_index], md5) == 0 || strcmp(argv[arg_index], sha1) == 0 || strcmp(argv[arg_index], sha224) == 0 || strcmp(argv[arg_index], sha256) == 0){
                 if(strcmp(argv[arg_index], md5) == 0){
                     func->md.name = MD5;
