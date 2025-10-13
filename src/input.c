@@ -408,8 +408,71 @@ uint8_t *convert_char_hex(char *restrict input, const struct function_infos *res
 
     return input_hex; // returns the translated string, that can now be compared with the computed hash
 }
+		
+bool parse_sum_file(struct user_choices *choices){
+	char *file_name = (char *)malloc(501);  // allocates memory for the ref hash and the file name
+	if(__builtin_expect(!file_name, 0)){
+		perror("Memory allocation failed");
+		goto ret_false;
+	}
+	
+	char *ref_hash  = (char *)malloc(140);
+	if(__builtin_expect(!ref_hash, 0)){
+		perror("Memory allocation failed");
+		goto free_filename;
+	}
 
+	FILE *f = fopen(choices->data_to_hash, "rb"); // opens the sum file
+	if(__builtin_expect(!f, 0)){
+		perror("File opening failed");
+		goto free_refhash;
+	}
+	
+	char buffer[550];
+	const uint16_t nb_char = fread(buffer, 1, 550, f); // copies the file's data to buffer
+	if(nb_char > 530) {                               //  if file is too big, returns
+		fprintf(stderr, "Error: file \"%s\" is too big\n", choices->data_to_hash);
+		fclose(f);
+		goto free_refhash;
+	}
 
+	fclose(f); // closes the sum file
+	
+	const char* const first_space = strchr(buffer, ' '); // pointer to the first space (normally right after the ref hash)
+	if(!first_space){                                    // if NULL -> no space -> bad format
+		fprintf(stderr, "Error: file \"%s\" is not properly formated\n", choices->data_to_hash);
+		goto free_refhash;
+	}
+
+	__builtin_memcpy(ref_hash, buffer, first_space - buffer); // copies the ref hash to ref_hash
+	ref_hash[first_space - buffer]= '\0';                     // adds the null terminator
+	const uint16_t ref_hash_len = strlen(ref_hash);
+	if(ref_hash_len > 128){                           // if read hash size != from expected size -> returns
+		fprintf(stderr, "Error: \"%s\": reference hash is too long\n", choices->data_to_hash);
+		goto free_refhash;
+	}
+
+	if((buffer[ref_hash_len + 1] != ' ' && buffer[ref_hash_len + 1] != '*') || buffer[ref_hash_len + 2] == ' ') { // second sep char is neither ' ' nor * -> returns
+		fprintf(stderr, "Error: file \"%s\" is not properly formated\n", choices->data_to_hash);                  // first char of file name is ' ' -> returns
+		goto free_refhash;
+	}
+
+	__builtin_mempcpy(file_name, first_space + 2, nb_char - (first_space - buffer + 3)); // copies the file name to file_name
+	file_name[nb_char - (first_space - buffer + 3)] = '\0';                              // adds the null terminator
+
+	choices->data_to_hash = file_name;             // ref hash and file name seem ok -> gives the pointers to struct user_choices
+	choices->compare_string = ref_hash;
+	
+	return true;
+
+free_refhash:
+	free(ref_hash);
+free_filename:
+	free(file_name);
+ret_false:
+	return false;
+
+}
 
 
 

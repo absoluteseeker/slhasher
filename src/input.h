@@ -36,4 +36,6 @@ void print_version();
 
 uint8_t *convert_char_hex(char *input, const struct function_infos *func);
 
+bool parse_sum_file(struct user_choices *choices);
+
 #endif

@@ -41,13 +41,20 @@ int main(int argc, char *argv[])
     choices.source = UFILE;
     choices.compare_string = NULL;
     choices.data_to_hash = NULL;
+    choices.sumfile = false;
 
     if(analyze_input(argc, argv, &func, &choices) == false){
         fprintf(stderr, "Aborted.\n");
         return -1;
     }
-
-    fill_func_infos(&func);
+	if(choices.sumfile){
+		if(!parse_sum_file(&choices)){
+			fprintf(stderr, "Aborted\n");
+			return -1;
+		}
+	}
+    
+	fill_func_infos(&func);
 
     switch(choices.mode){
     case HELP:
@@ -117,7 +124,10 @@ int main(int argc, char *argv[])
                 free(usr_ref);
             }
         }
-
+		if(choices.sumfile){
+			free(choices.data_to_hash);
+			free(choices.compare_string);
+		}
         free(_hash);
         break;
     }
