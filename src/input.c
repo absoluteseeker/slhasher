@@ -353,6 +353,7 @@ void print_help(){
     printf("      --sha3-224\n      --sha3-256\n      --sha3-384\n      --sha3-512\n");
     printf("  - other options:\n");
     printf("      --string      specifies that the input is a string of characters\n");
+	printf("      --sumfile     reads a sum file (file that contains a file name and its hash) and checks whether the file's hash is identical to the reference hash\n");
     printf("      --help        prints this help\n");
     printf("      --version     prints the current version of Slhasher\n");
     printf("INPUT:\n   input can be a file (default) or a string of characters\n");
