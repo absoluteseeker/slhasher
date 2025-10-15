@@ -121,6 +121,7 @@ uint64_t K_table_sha512[80] =  {0x428a2f98d728ae22ULL, 0x7137449123ef65cdULL, 0x
                                 0x431d67c49c100d4cULL, 0x4cc5d4becb3e42b6ULL, 0x597f299cfc657e2aULL, 0x5fcb6fab3ad6faecULL, 0x6c44198c4a475817ULL
 };
 
+uint64_t hash_values_tiger[3] = {0x0123456789ABCDEFULL, 0xFEDCBA9876543210ULL, 0xF096A5B4C3B2E187ULL};
 
     // analyze_input()
     // parses the user input to determine what to do
@@ -306,6 +307,14 @@ void fill_func_infos(struct function_infos *func){
             default:
                 break;
             }
+		}else if(func->md.name == TIGER || func->md.name == TIGER_2) {
+			func->md.nb_words = 8;
+			func->md.word_size_in_bytes = 8;
+			func->md.block_size_in_bytes = 64;
+			func->md.block_size_without_input_size = 56;
+			func->md.nb_hval_in_hash = 3;
+			func->md.hash_values_u64 = hash_values_tiger;
+			func->hash_size_in_bytes = 24;
         } else{
             func->md.word_size_in_bytes = 4;
             func->md.block_size_in_bytes = 64;
