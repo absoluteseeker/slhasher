@@ -49,7 +49,7 @@ typedef struct user_choices {
 
 enum function_type { MERKLE_DAMGARD, SPONGE }; // holds the different types of construction (as of now: Merkle-Damgard and sponge)
 
-enum chosen_function_md { MD5, SHA_1, SHA_224, SHA_256, SHA_384, SHA_512, SHA_512_t }; // holds the functions based on the Merkle-Damgard construction
+enum chosen_function_md { MD5, SHA_1, SHA_224, SHA_256, SHA_384, SHA_512, SHA_512_t, TIGER, TIGER_2 }; // holds the functions based on the Merkle-Damgard construction
 
 struct m_d {
     enum chosen_function_md name;
