@@ -368,6 +368,7 @@ void print_help(){
     printf("  - functions:\n");
     printf("      --md5\n      --sha1\n      --sha224\n      --sha256\n      --sha384\n      --sha512\n      --sha512/224\n      --sha512/256\n");
     printf("      --sha3-224\n      --sha3-256\n      --sha3-384\n      --sha3-512\n");
+	printf("      --tiger\n      --tiger2\n");
     printf("  - other options:\n");
     printf("      --string      specifies that the input is a string of characters\n");
 	printf("      --sumfile     reads a sum file (file that contains a file name and its hash) and checks whether the file's hash is identical to the reference hash\n");
