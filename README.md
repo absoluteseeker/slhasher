@@ -24,6 +24,10 @@ The current version of Slhasher (1.0) features the following cryptographic hash 
     - SHA3-284
     - SHA3-512
 
+- Tiger
+
+- Tiger2
+
 - To use a function, you have to type its name, preceded by to dashes ('--').
 Example: slhasher --sha256 file1.exe
 
