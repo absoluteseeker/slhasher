@@ -142,6 +142,8 @@ bool analyze_input(const int argc, char **restrict argv, struct function_infos *
     const char *sha3_256 = "--sha3-256";
     const char *sha3_384 = "--sha3-384";
     const char *sha3_512 = "--sha3-512";
+	const char *tiger = "--tiger";
+	const char *tiger2 = "--tiger2";
 
     const char *help = "--help";
     const char *version = "--version";
@@ -182,7 +184,7 @@ bool analyze_input(const int argc, char **restrict argv, struct function_infos *
                 } else if(strcmp(argv[arg_index], sha256) == 0){
                     func->md.name = SHA_256;
                 }
-            } else if(strcmp(argv[arg_index], sha384) == 0 || strcmp(argv[arg_index], sha512) == 0 || strncmp(argv[arg_index], sha512t, 9) == 0){
+            } else if(strcmp(argv[arg_index], sha384) == 0 || strcmp(argv[arg_index], sha512) == 0 || strncmp(argv[arg_index], sha512t, 9) == 0 || strcmp(argv[arg_index], tiger) == 0 || strcmp(argv[arg_index], tiger2) == 0){
                 if(strcmp(argv[arg_index], sha384) == 0){
                     func->md.name = SHA_384;
                 } else if(strcmp(argv[arg_index], sha512) == 0){
@@ -205,7 +207,13 @@ bool analyze_input(const int argc, char **restrict argv, struct function_infos *
                     if(!generate_hval_sha512t(func)){ // generates the initial hash values starting from the aforementioned string
                         return false;
                     }
-                }
+                } else if(strcmp(argv[arg_index], tiger) == 0){
+					func->md.name = TIGER;
+					continue;
+				} else{
+					func->md.name = TIGER_2;
+					continue;
+				}
             } else if(strcmp(argv[arg_index], sha3_224) == 0 || strcmp(argv[arg_index], sha3_256) == 0 || strcmp(argv[arg_index], sha3_384) == 0 || strcmp(argv[arg_index], sha3_512) == 0){
                 func->type = SPONGE;
 
