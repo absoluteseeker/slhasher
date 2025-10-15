@@ -30,6 +30,7 @@
 #include "md5.h"
 #include "sha-1.h"
 #include "sha-2.h"
+#include "tiger.h"
 #include "m_d.h"
 
 static const uint32_t buffer_size_max = 256000;
@@ -58,7 +59,7 @@ static void padding(uint8_t *buffer, const uint32_t nb_read_bytes, uint8_t *nb_p
 
     *nb_padding_bytes = (remainder >= func->md.block_size_without_input_size) ? (func->md.block_size_in_bytes - remainder + func->md.block_size_without_input_size) : func->md.block_size_without_input_size - remainder;
 
-    buffer[nb_read_bytes] = 0x80;
+	buffer[nb_read_bytes] = (func->md.name == TIGER) ? 0x01 : 0x80;
 
     if(*nb_padding_bytes > 1){
         __builtin_memset(buffer + nb_read_bytes + 1, 0, *nb_padding_bytes);
@@ -120,7 +121,6 @@ static uint8_t *assemble_hval_little_endian(uint8_t *restrict digest, const stru
 
 uint8_t *md_file(const char *file_name, struct function_infos *func){
  
-
     FILE *f = fopen(file_name, "rb"); // opens the file and check for failure
     if(__builtin_expect(!f, 0)){
         perror("File opening failed");
@@ -185,29 +185,39 @@ uint8_t *md_file(const char *file_name, struct function_infos *func){
 		// that's fine as long as the input's size is not bigger than 2^64 - 1 bytes
 		// I'll make sure to add support for input sizes coded on 128 bits (up to 2^128 - 1 bytes) in the future, 
 		// as it is described in the official SHA-512 specification
+				if(func->md.name != TIGER && func->md.name != TIGER_2) {
+                	__builtin_memset(buffer + nb_read_bytes + nb_padding_bytes, 0, 8);
+				
+                	nb_padding_bytes += 8;
 
-                __builtin_memset(buffer + nb_read_bytes + nb_padding_bytes, 0, 8);
-
-                nb_padding_bytes += 8;
-
-                add_size_in_big_endian(buffer, file_size, nb_read_bytes + nb_padding_bytes + 8);
+                	add_size_in_big_endian(buffer, file_size, nb_read_bytes + nb_padding_bytes + 8);
+				} else { 
+					const uint64_t file_size_bits = file_size * 8;
+					__builtin_memcpy(buffer + nb_read_bytes + nb_padding_bytes, &file_size_bits, 8); 
+				} 
             }
 
-            sha512(buffer, words, nb_read_bytes, buffer_size, func); // hashes the current "buffer"
+            if(func->md.name != TIGER && func->md.name != TIGER_2) sha512(buffer, words, nb_read_bytes, buffer_size, func); // hashes the current "buffer"
+			if(func->md.name == TIGER || func->md.name == TIGER_2) tiger(buffer, words, nb_read_bytes, buffer_size, func);
         }
 
         if(nb_bytes == buffer_size){ // end of file is reached but the file size is a multiple of the buffer size -> we hash the block containing
             uint8_t nb_padding_bytes; // the padding and the input size
 
             padding(buffer, 0, &nb_padding_bytes, func);
+			if(func->md.name != TIGER && func->md.name != TIGER_2){
+            	for(uint8_t b = nb_padding_bytes; b < nb_padding_bytes + 8; b++) buffer[b] = 0;
 
-            for(uint8_t b = nb_padding_bytes; b < nb_padding_bytes + 8; b++) buffer[b] = 0;
+            	nb_padding_bytes += 8;
 
-            nb_padding_bytes += 8;
+            	add_size_in_big_endian(buffer, file_size, nb_padding_bytes + 8);
 
-            add_size_in_big_endian(buffer, file_size, nb_padding_bytes + 8);
-
-            sha512(buffer, words, 0, buffer_size, func);
+            	sha512(buffer, words, 0, buffer_size, func);
+			} else{
+				const uint64_t file_size_bits = file_size * 8;
+                __builtin_memcpy(buffer + nb_read_bytes + nb_padding_bytes, &file_size_bits, 8);
+				tiger(buffer, words, nb_read_bytes, buffer_size, func);
+			}
         }
 
         free(words);
@@ -300,7 +310,13 @@ uint8_t *md_file(const char *file_name, struct function_infos *func){
 
     fclose(f);
     free(buffer);
- 
+	
+	if(func->md.name == TIGER || func->md.name == TIGER_2){
+		__builtin_memcpy(digest, &(func->md.hash_values_u64[0]), 8);
+		__builtin_memcpy(digest + 8, &(func->md.hash_values_u64[1]), 8);
+		__builtin_memcpy(digest + 16, &(func->md.hash_values_u64[2]), 8);
+		return digest;
+	}
 
     if(func->md.word_size_in_bytes == 8){
         return assemble_hval_big_endian_sha512(digest, func);
@@ -353,19 +369,24 @@ uint8_t *md_string(const char *input_string, struct function_infos *func){
 
     if(func->md.word_size_in_bytes == 8){
         //for(uint16_t b = string_len + nb_padding_bytes; b < string_len + nb_padding_bytes + 8; b++) buffer[b] = 0;
-	__builtin_memset(buffer + string_len + nb_padding_bytes, 0, 8);
-        nb_padding_bytes += 8;
+		if(func->md.name != TIGER && func->md.name != TIGER_2) {
+			__builtin_memset(buffer + string_len + nb_padding_bytes, 0, 8);
+        	nb_padding_bytes += 8;
 
-        add_size_in_big_endian(buffer, string_len, string_len + nb_padding_bytes + 8);
-
+        	add_size_in_big_endian(buffer, string_len, string_len + nb_padding_bytes + 8);
+		} else {
+			uint64_t string_len_bits = string_len * 8;
+			__builtin_memcpy(buffer + string_len + nb_padding_bytes, &string_len_bits, 8);	
+		}
         uint64_t *words = (uint64_t *)calloc(func->md.nb_words, 8);
         if(__builtin_expect(!words, 0)){
             perror("Memory allocation failed");
             goto free_buffer;
         }
+		
 
-        sha512(buffer, words, string_len, buffer_size, func);
-
+        if(func->md.name != TIGER && func->md.name != TIGER_2) sha512(buffer, words, string_len, buffer_size, func);
+		if(func->md.name == TIGER || func->md.name == TIGER_2) tiger(buffer, words, string_len, buffer_size, func);
         free(words);
 
     } else if(func->md.word_size_in_bytes == 4){
@@ -397,7 +418,6 @@ uint8_t *md_string(const char *input_string, struct function_infos *func){
             funcpointer = sha256;
             break;
         default:
-            funcpointer = NULL;
             break;
         }
 
@@ -418,6 +438,13 @@ uint8_t *md_string(const char *input_string, struct function_infos *func){
     free(buffer);
 
     if(func->md.name == SHA_512_t && func->md.sha512_t) {free(func->md.sha512_t); func->md.sha512_t = NULL;}
+	
+	if(func->md.name == TIGER || func->md.name == TIGER_2){
+        __builtin_memcpy(digest, &(func->md.hash_values_u64[0]), 8);
+        __builtin_memcpy(digest + 8, &(func->md.hash_values_u64[1]), 8);
+        __builtin_memcpy(digest + 16, &(func->md.hash_values_u64[2]), 8);
+        return digest;
+    }
 
     if(func->md.word_size_in_bytes == 8) return assemble_hval_big_endian_sha512(digest, func);
     if(func->md.name == MD5){
