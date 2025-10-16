@@ -159,6 +159,8 @@ uint8_t *md_file(const char *file_name, struct function_infos *func){
             goto free_buffer;
         }
 
+		
+		void (*fpointer)(const uint8_t *, uint64_t *, const uint32_t, const uint32_t, struct function_infos *) = (func->md.name == TIGER || func->md.name == TIGER_2) ? tiger : sha512;
         uint32_t nb_bytes = 0;
 
         while((nb_read_bytes = fread(buffer, 1, buffer_size, f)) > 0){ // Slhasher uses fread() as of version 1.0
@@ -196,15 +198,14 @@ uint8_t *md_file(const char *file_name, struct function_infos *func){
 					__builtin_memcpy(buffer + nb_read_bytes + nb_padding_bytes, &file_size_bits, 8); 
 				} 
             }
-
-            if(func->md.name != TIGER && func->md.name != TIGER_2) sha512(buffer, words, nb_read_bytes, buffer_size, func); // hashes the current "buffer"
-			if(func->md.name == TIGER || func->md.name == TIGER_2) tiger(buffer, words, nb_read_bytes, buffer_size, func);
+            fpointer(buffer, words, nb_read_bytes, buffer_size, func); // hashes the current "buffer"
         }
 
         if(nb_bytes == buffer_size){ // end of file is reached but the file size is a multiple of the buffer size -> we hash the block containing
             uint8_t nb_padding_bytes; // the padding and the input size
 
             padding(buffer, 0, &nb_padding_bytes, func);
+			
 			if(func->md.name != TIGER && func->md.name != TIGER_2){
             	for(uint8_t b = nb_padding_bytes; b < nb_padding_bytes + 8; b++) buffer[b] = 0;
 
@@ -212,12 +213,12 @@ uint8_t *md_file(const char *file_name, struct function_infos *func){
 
             	add_size_in_big_endian(buffer, file_size, nb_padding_bytes + 8);
 
-            	sha512(buffer, words, 0, buffer_size, func);
 			} else{
 				const uint64_t file_size_bits = file_size * 8;
                 __builtin_memcpy(buffer + nb_read_bytes + nb_padding_bytes, &file_size_bits, 8);
-				tiger(buffer, words, nb_read_bytes, buffer_size, func);
 			}
+
+			fpointer(buffer, words, nb_read_bytes, buffer_size, func);
         }
 
         free(words);
@@ -369,6 +370,8 @@ uint8_t *md_string(const char *input_string, struct function_infos *func){
 
     if(func->md.word_size_in_bytes == 8){
         //for(uint16_t b = string_len + nb_padding_bytes; b < string_len + nb_padding_bytes + 8; b++) buffer[b] = 0;
+
+		void (*fpointer)(const uint8_t *, uint64_t *, const uint32_t, const uint32_t, struct function_infos *) = (func->md.name == TIGER || func->md.name == TIGER_2) ? tiger : sha512;
 		if(func->md.name != TIGER && func->md.name != TIGER_2) {
 			__builtin_memset(buffer + string_len + nb_padding_bytes, 0, 8);
         	nb_padding_bytes += 8;
@@ -384,9 +387,9 @@ uint8_t *md_string(const char *input_string, struct function_infos *func){
             goto free_buffer;
         }
 		
+        
+		fpointer(buffer, words, string_len, buffer_size, func);
 
-        if(func->md.name != TIGER && func->md.name != TIGER_2) sha512(buffer, words, string_len, buffer_size, func);
-		if(func->md.name == TIGER || func->md.name == TIGER_2) tiger(buffer, words, string_len, buffer_size, func);
         free(words);
 
     } else if(func->md.word_size_in_bytes == 4){
