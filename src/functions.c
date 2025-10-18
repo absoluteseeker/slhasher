@@ -57,9 +57,13 @@ void add_size_in_big_endian(uint8_t *input, const uint64_t input_length, const u
     // used in md5()
 
 void add_size_in_little_endian(uint8_t *input, const uint64_t input_length, const uint64_t padded_input_length){
-    uint64_t input_len_in_bits = input_length * 8;
-    for(uint8_t k = 0; k < 8; k++){
+    const uint64_t input_len_in_bits = input_length * 8;
+	
+	__builtin_memcpy(input + padded_input_length, &input_len_in_bits, 8);
+   
+	/*for(uint8_t k = 0; k < 8; k++){
         uint8_t byte = (uint8_t)((input_len_in_bits >> k * 8) & 0xFF);
         input[(padded_input_length - 8) + k] = byte;
     }
+	*/
 }
