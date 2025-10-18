@@ -583,13 +583,7 @@ void tiger(const uint8_t *restrict buffer, uint64_t *restrict words, const uint3
 
 	ldiv_t result = ldiv(nb_read_bytes, func->md.block_size_in_bytes);
 
-    uint16_t nb_blocks_in_buffer = 0;
-
-    if(nb_read_bytes == buffer_size){
-        nb_blocks_in_buffer = result.quot;
-    } else{
-        nb_blocks_in_buffer = (result.rem >= func->md.block_size_without_input_size) ? result.quot + 2 : result.quot + 1;
-    }
+    const uint16_t nb_blocks_in_buffer = (nb_read_bytes == buffer_size) ? result.quot : ((result.rem >= func->md.block_size_without_input_size) ? result.quot + 2 : result.quot + 1);
 
 	uint64_t *A, *B, *C;
 	A = &(func->md.hash_values_u64[0]);

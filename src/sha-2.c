@@ -61,16 +61,9 @@ static inline void extend_words_sha256(uint32_t *words){
 
 void sha256(const uint8_t *restrict buffer, uint32_t *restrict words, const uint32_t nb_read_bytes, const uint32_t buffer_size, struct function_infos *restrict func){
 
-
     ldiv_t result = ldiv(nb_read_bytes, func->md.block_size_in_bytes);
 
-    uint16_t nb_blocks_in_buffer;
-
-    if(nb_read_bytes == buffer_size){
-        nb_blocks_in_buffer = result.quot;
-    } else{
-        nb_blocks_in_buffer = (result.rem >= func->md.block_size_without_input_size) ? result.quot + 2 : result.quot + 1;
-    }
+    const uint16_t nb_blocks_in_buffer = (nb_read_bytes == buffer_size) ? result.quot : ((result.rem >= func->md.block_size_without_input_size) ? result.quot + 2 : result.quot + 1);
 
     uint32_t A, B, C, D, E, F, G, H = 0;
 
@@ -180,12 +173,7 @@ void sha512(const uint8_t *restrict buffer, uint64_t *restrict words, const uint
 
     ldiv_t result = ldiv(nb_read_bytes, func->md.block_size_in_bytes);
 
-    uint16_t nb_blocks_in_buffer;
-    if(nb_read_bytes == buffer_size){
-        nb_blocks_in_buffer = result.quot;
-    } else{
-        nb_blocks_in_buffer = (result.rem >= func->md.block_size_without_input_size) ? result.quot + 2 : result.quot + 1;
-    }
+    const uint16_t nb_blocks_in_buffer = (nb_read_bytes == buffer_size) ? result.quot : ((result.rem >= func->md.block_size_without_input_size) ? result.quot + 2 : result.quot + 1);
 
     uint64_t A, B, C, D, E, F, G, H;
 

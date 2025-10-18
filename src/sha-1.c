@@ -53,13 +53,7 @@ void sha1(const uint8_t *restrict buffer, uint32_t *restrict words, const uint32
 
     ldiv_t result = ldiv(nb_read_bytes, 64);
 
-    uint16_t nb_blocks_in_buffer;
-
-    if(nb_read_bytes == buffer_size){
-        nb_blocks_in_buffer = result.quot;
-    } else{
-        nb_blocks_in_buffer = (result.rem >= func->md.block_size_without_input_size) ? result.quot + 2 : result.quot + 1;
-    }
+    const uint16_t nb_blocks_in_buffer = (nb_read_bytes == buffer_size) ? result.quot : ((result.rem >= func->md.block_size_without_input_size) ? result.quot + 2 : result.quot + 1);
 
     uint32_t A, B, C, D, E, K = 0;
 
