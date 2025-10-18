@@ -183,16 +183,16 @@ uint8_t *md_file(const char *file_name, struct function_infos *func){
                 padding(buffer, nb_read_bytes, &nb_padding_bytes, func);
 
 
-		// the first 8 bytes of the block's last 16 bytes are just zeroed for now
-		// that's fine as long as the input's size is not bigger than 2^64 - 1 bytes
-		// I'll make sure to add support for input sizes coded on 128 bits (up to 2^128 - 1 bytes) in the future, 
-		// as it is described in the official SHA-512 specification
+				// the first 8 bytes of the block's last 16 bytes for SHA-512 are just zeroed for now
+				// that's fine as long as the input's size is not bigger than 2^64 - 1 bytes
+				// I'll make sure to add support for input sizes coded on 128 bits (up to 2^128 - 1 bytes) in the future, 
+				// as it is described in the official SHA-512 specification
 				if(func->md.name != TIGER && func->md.name != TIGER_2) {
                 	__builtin_memset(buffer + nb_read_bytes + nb_padding_bytes, 0, 8);
 				
                 	nb_padding_bytes += 8;
 
-                	add_size_in_big_endian(buffer, file_size, nb_read_bytes + nb_padding_bytes + 8);
+                	add_size_in_big_endian(buffer, file_size, nb_read_bytes + nb_padding_bytes);
 				} else { 
 					const uint64_t file_size_bits = file_size * 8;
 					__builtin_memcpy(buffer + nb_read_bytes + nb_padding_bytes, &file_size_bits, 8); 
@@ -211,7 +211,7 @@ uint8_t *md_file(const char *file_name, struct function_infos *func){
 
             	nb_padding_bytes += 8;
 
-            	add_size_in_big_endian(buffer, file_size, nb_padding_bytes + 8);
+            	add_size_in_big_endian(buffer, file_size, nb_padding_bytes);
 
 			} else{
 				const uint64_t file_size_bits = file_size * 8;

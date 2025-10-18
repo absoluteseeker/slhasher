@@ -46,7 +46,7 @@ void add_size_in_big_endian(uint8_t *input, const uint64_t input_length, const u
     uint64_t input_len_in_bits = input_length * 8;
     for(uint8_t k = 0; k < 8; k++){
         uint8_t byte = (uint8_t)((input_len_in_bits >> (7 - k) * 8));
-        input[(padded_input_length - 8) + k] = byte;
+        input[padded_input_length + k] = byte;
     }
 
 
