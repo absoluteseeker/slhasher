@@ -83,13 +83,9 @@ void md5(const uint8_t *restrict buffer, uint32_t *restrict words, const uint32_
 
     uint32_t A, B, C, D;
 
-    uint32_t (*fpointer)(uint32_t, uint32_t, uint32_t);
+    uint32_t (*fpointer)(uint32_t, uint32_t, uint32_t) = NULL;
 
     for(size_t block_index = 0; block_index < nb_blocks_in_buffer; block_index++){
-
-        __builtin_memset(words, 0, 64);
-
-
 
         __builtin_memcpy(words, buffer + block_index * 64, 64);
 
@@ -97,7 +93,6 @@ void md5(const uint8_t *restrict buffer, uint32_t *restrict words, const uint32_
         B = func->md.hash_values[1];
         C = func->md.hash_values[2];
         D = func->md.hash_values[3];
-
 
         for(uint8_t i = 0; i < 64; i++){
             uint8_t word_index;
@@ -121,8 +116,8 @@ void md5(const uint8_t *restrict buffer, uint32_t *restrict words, const uint32_
             C = B;
             B += leftrotate(temp, s_table[i]);
 
-
         }
+
         func->md.hash_values[0] += A;
         func->md.hash_values[1] += B;
         func->md.hash_values[2] += C;

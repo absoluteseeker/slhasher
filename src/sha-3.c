@@ -47,11 +47,12 @@ static const uint64_t round_consts[24] = {0x0000000000000001ULL, 0x0000000000008
 
 static uint32_t choose_buffer_size(const uint64_t input_size, const struct function_infos *func){ 
     uint32_t buffer_size;
-    lldiv_t result = lldiv(input_size, func->sha3.rate);
+
     if(input_size > biggest_input_size){
         buffer_size = 2000 * func->sha3.rate;
     } else{
-        buffer_size = (result.rem >= func->sha3.rate - 1) ? (result.quot + 2) * func->sha3.rate : (result.quot + 1) * func->sha3.rate;
+        lldiv_t result = lldiv(input_size, func->sha3.rate);
+		buffer_size = (result.rem >= func->sha3.rate - 1) ? (result.quot + 2) * func->sha3.rate : (result.quot + 1) * func->sha3.rate;
     }
     return buffer_size;
 }
@@ -64,7 +65,6 @@ static void padding(uint8_t *input, uint32_t *nb_read_bytes, const struct functi
     const uint8_t remainder = *nb_read_bytes % func->sha3.rate;
 
     const uint8_t nb_padding_bytes = (remainder == func->sha3.rate - 1) ? func->sha3.rate : func->sha3.rate - 1 - remainder;
-
 
     input[*nb_read_bytes] = func->sha3.suffix;
 

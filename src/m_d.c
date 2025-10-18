@@ -55,9 +55,10 @@ static uint32_t choose_buffer_size(const uint64_t input_size, const struct funct
     // used in md_file() and md_string()
 
 static void padding(uint8_t *buffer, const uint32_t nb_read_bytes, uint8_t *nb_padding_bytes, const struct function_infos *func){
-    uint8_t remainder = nb_read_bytes % func->md.block_size_in_bytes;
+    const uint8_t remainder = nb_read_bytes % func->md.block_size_in_bytes;
 
-    *nb_padding_bytes = (remainder >= func->md.block_size_without_input_size) ? (func->md.block_size_in_bytes - remainder + func->md.block_size_without_input_size) : func->md.block_size_without_input_size - remainder;
+    *nb_padding_bytes = (remainder >= func->md.block_size_without_input_size) ? (func->md.block_size_in_bytes - remainder + func->md.block_size_without_input_size) : 
+	func->md.block_size_without_input_size - remainder;
 
 	buffer[nb_read_bytes] = (func->md.name == TIGER) ? 0x01 : 0x80;
 
@@ -233,7 +234,7 @@ uint8_t *md_file(const char *file_name, struct function_infos *func){
             goto free_buffer;
         }
 
-	void (*funcpointer)(const uint8_t *, uint32_t *, const uint32_t, const uint32_t, struct function_infos *) = NULL; // the function is called through
+		void (*funcpointer)(const uint8_t *, uint32_t *, const uint32_t, const uint32_t, struct function_infos *) = NULL; // the function is called through
 															  // a function pointer
         switch(func->md.name){
         case MD5:
@@ -358,25 +359,26 @@ uint8_t *md_string(const char *input_string, struct function_infos *func){
     padding(buffer, string_len, &nb_padding_bytes, func);
 
     if(func->md.word_size_in_bytes == 8){
-        //for(uint16_t b = string_len + nb_padding_bytes; b < string_len + nb_padding_bytes + 8; b++) buffer[b] = 0;
-
 		void (*fpointer)(const uint8_t *, uint64_t *, const uint32_t, const uint32_t, struct function_infos *) = (func->md.name == TIGER || func->md.name == TIGER_2) ? tiger : sha512;
+		
 		if(func->md.name != TIGER && func->md.name != TIGER_2) {
 			__builtin_memset(buffer + string_len + nb_padding_bytes, 0, 8);
-        	nb_padding_bytes += 8;
+        	
+			nb_padding_bytes += 8;
 
-        	add_size_in_big_endian(buffer, string_len, string_len + nb_padding_bytes + 8);
+        	add_size_in_big_endian(buffer, string_len, string_len + nb_padding_bytes);
 		} else {
-			uint64_t string_len_bits = string_len * 8;
+			const uint64_t string_len_bits = string_len * 8;
+			
 			__builtin_memcpy(buffer + string_len + nb_padding_bytes, &string_len_bits, 8);	
 		}
-        uint64_t *words = (uint64_t *)calloc(func->md.nb_words, 8);
+        
+		uint64_t *words = (uint64_t *)calloc(func->md.nb_words, 8);
         if(__builtin_expect(!words, 0)){
             perror("Memory allocation failed");
             goto free_buffer;
         }
 		
-        
 		fpointer(buffer, words, string_len, buffer_size, func);
 
         free(words);
@@ -389,7 +391,7 @@ uint8_t *md_string(const char *input_string, struct function_infos *func){
         if(__builtin_expect(!words, 0)){
             perror("Memory allocation failed");
             goto free_buffer;
-        }
+		}
 
         void (*funcpointer)(const uint8_t *, uint32_t *, const uint32_t, const uint32_t, struct function_infos *) = NULL;
 

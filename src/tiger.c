@@ -595,14 +595,16 @@ void tiger(const uint8_t *restrict buffer, uint64_t *restrict words, const uint3
 	A = &(func->md.hash_values_u64[0]);
 	B = &(func->md.hash_values_u64[1]);
 	C = &(func->md.hash_values_u64[2]);
+	
+	uint64_t AA, BB, CC;
 
 	for(uint16_t block_index = 0; block_index < nb_blocks_in_buffer; block_index++) {
 		__builtin_memcpy(words, buffer + block_index * 64, 64);
 		
 
-		uint64_t AA = func->md.hash_values_u64[0];
-		uint64_t BB = func->md.hash_values_u64[1];
-		uint64_t CC = func->md.hash_values_u64[2];
+		AA = func->md.hash_values_u64[0];
+		BB = func->md.hash_values_u64[1];
+		CC = func->md.hash_values_u64[2];
 		
 		pass(A, B, C, words, 5);
 		
