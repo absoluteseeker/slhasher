@@ -274,11 +274,9 @@ uint8_t *md_file(const char *file_name, struct function_infos *func){
 
                 padding(buffer, nb_read_bytes, &nb_padding_bytes, func);
 
-                if(func->md.name == MD5){
-                    add_size_in_little_endian(buffer, file_size, nb_read_bytes + nb_padding_bytes + 8);
-                } else{
-                    add_size_in_big_endian(buffer, file_size, nb_read_bytes + nb_padding_bytes + 8);
-                }
+                (func->md.name == MD5) ? add_size_in_little_endian(buffer, file_size, nb_read_bytes + nb_padding_bytes) : 
+				add_size_in_big_endian(buffer, file_size, nb_read_bytes + nb_padding_bytes);
+                
             }
 
             funcpointer(buffer, words, nb_read_bytes, buffer_size, func);
@@ -289,11 +287,7 @@ uint8_t *md_file(const char *file_name, struct function_infos *func){
 
             padding(buffer, 0, &nb_padding_bytes, func);
 
-            if(func->md.name == MD5){
-                add_size_in_little_endian(buffer, file_size, nb_padding_bytes + 8);
-            } else{
-                add_size_in_big_endian(buffer, file_size, nb_padding_bytes + 8);
-            }
+            (func->md.name == MD5) ? add_size_in_little_endian(buffer, file_size, nb_padding_bytes) : add_size_in_big_endian(buffer, file_size, nb_padding_bytes);
 
             funcpointer(buffer, words, 0, buffer_size, func);
         }
@@ -395,12 +389,9 @@ uint8_t *md_string(const char *input_string, struct function_infos *func){
         free(words);
 
     } else if(func->md.word_size_in_bytes == 4){
-        if(func->md.name == MD5){
-            add_size_in_little_endian(buffer, string_len, string_len + nb_padding_bytes + 8);
-        } else{
-            add_size_in_big_endian(buffer, string_len, string_len + nb_padding_bytes + 8);
-        }
-
+        (func->md.name == MD5) ? add_size_in_little_endian(buffer, string_len, string_len + nb_padding_bytes) : 
+		add_size_in_big_endian(buffer, string_len, string_len + nb_padding_bytes);
+        
         uint32_t *words = (uint32_t *)calloc(func->md.nb_words, 4);
         if(__builtin_expect(!words, 0)){
             perror("Memory allocation failed");

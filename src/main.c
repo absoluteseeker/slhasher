@@ -101,11 +101,7 @@ int main(int argc, char *argv[])
 
             for(uint8_t i = 0; i < func.hash_size_in_bytes; i++) printf("%02x", _hash[i]); // prints the hash to the user
 
-            if(choices.source == STRING){       // prints the source (file name or char string)
-                printf("  \"%s\"\n", choices.data_to_hash);
-            } else{
-                printf("  %s\n", choices.data_to_hash);
-            }
+            (choices.source == STRING) ? printf("  \"%s\"\n", choices.data_to_hash) : printf("  %s\n", choices.data_to_hash);  // prints the source (file name or char string)
 
             if(choices.compare_string != NULL){        // compares the computed hash with the provided reference hash
                 if(strlen(choices.compare_string) != func.hash_size_in_bytes * 2){
@@ -115,11 +111,7 @@ int main(int argc, char *argv[])
 
                 uint8_t *usr_ref = convert_char_hex(choices.compare_string, &func);
 
-                if(memcmp(_hash, usr_ref, func.hash_size_in_bytes) == 0){
-                    printf("Check: passed - hashes are identical\n");
-                } else{
-                    printf("Check: failed - hashes are different\n");
-                }
+                (memcmp(_hash, usr_ref, func.hash_size_in_bytes) == 0) ? printf("Check: passed - hashes are identical\n") : printf("Check: failed - hashes are different\n");
 
                 free(usr_ref);
             }
