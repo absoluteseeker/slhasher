@@ -308,22 +308,15 @@ uint8_t *md_file(const char *file_name, struct function_infos *func){
     fclose(f);
     free(buffer);
 	
-	if(func->md.name == TIGER || func->md.name == TIGER_2){
-		__builtin_memcpy(digest, &(func->md.hash_values_u64[0]), 8);
-		__builtin_memcpy(digest + 8, &(func->md.hash_values_u64[1]), 8);
-		__builtin_memcpy(digest + 16, &(func->md.hash_values_u64[2]), 8);
-		return digest;
+	if(func->md.name == TIGER || func->md.name == TIGER_2 || func->md.name == MD5){
+		return assemble_hval_little_endian(digest, func);
+	} else{
+		if(func->md.word_size_in_bytes == 8){
+        	return assemble_hval_big_endian_sha512(digest, func);
+    	} else{
+			return assemble_hval_big_endian(digest, func);
+		}
 	}
-
-    if(func->md.word_size_in_bytes == 8){
-        return assemble_hval_big_endian_sha512(digest, func);
-    } else{
-        if(func->md.name == MD5){
-            return assemble_hval_little_endian(digest, func);
-        } else{
-            return assemble_hval_big_endian(digest, func);
-        }
-    }
 
 free_buffer:
     free(buffer);
@@ -435,19 +428,15 @@ uint8_t *md_string(const char *input_string, struct function_infos *func){
 
     if(func->md.name == SHA_512_t && func->md.sha512_t) {free(func->md.sha512_t); func->md.sha512_t = NULL;}
 	
-	if(func->md.name == TIGER || func->md.name == TIGER_2){
-        __builtin_memcpy(digest, &(func->md.hash_values_u64[0]), 8);
-        __builtin_memcpy(digest + 8, &(func->md.hash_values_u64[1]), 8);
-        __builtin_memcpy(digest + 16, &(func->md.hash_values_u64[2]), 8);
-        return digest;
-    }
-
-    if(func->md.word_size_in_bytes == 8) return assemble_hval_big_endian_sha512(digest, func);
-    if(func->md.name == MD5){
+   	if(func->md.name == TIGER || func->md.name == TIGER_2 || func->md.name == MD5){
         return assemble_hval_little_endian(digest, func);
     } else{
-        return assemble_hval_big_endian(digest, func);
-    }
+        if(func->md.word_size_in_bytes == 8){
+            return assemble_hval_big_endian_sha512(digest, func);
+        } else{
+            return assemble_hval_big_endian(digest, func);
+        }
+    } 
 
 free_buffer:
     free(buffer);
