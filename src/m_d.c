@@ -105,13 +105,15 @@ static uint8_t *assemble_hval_big_endian_sha512(uint8_t *digest, const struct fu
     // used in md_file() and md_string() -> only for MD5 as of version 1.0
 
 static uint8_t *assemble_hval_little_endian(uint8_t *restrict digest, const struct function_infos *restrict func){
-    for(uint8_t i = 0; i < func->hash_size_in_bytes / 4; i++){
+    for(uint8_t i = 0; i < func->md.nb_hval_in_hash; i++) __builtin_memcpy(digest + func->md.word_size_in_bytes * i, &(func->md.hash_values[i]), func->md.word_size_in_bytes);
+
+	/*for(uint8_t i = 0; i < func->hash_size_in_bytes / 4; i++){
         digest[i * 4]     = (uint8_t)(func->md.hash_values[i]);
         digest[i * 4 + 1] = (uint8_t)(func->md.hash_values[i] >> 8);
         digest[i * 4 + 2] = (uint8_t)(func->md.hash_values[i] >> 16);
         digest[i * 4 + 3] = (uint8_t)(func->md.hash_values[i] >> 24);
     }
-    
+    */
     return digest;
 }
 
